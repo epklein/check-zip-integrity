@@ -1,10 +1,9 @@
 import os
 import sys
-import subprocess
 import argparse
-import shutil
 from pathlib import Path
-from typing import List, Set, Optional
+from typing import Set
+import py7zr
 
 def find_7z_files(directory: str) -> Set[str]:
     """Find all unique 7z archives, including split volumes."""
@@ -31,34 +30,19 @@ def find_7z_files(directory: str) -> Set[str]:
     
     return archives
 
-def find_7z_executable() -> Optional[str]:
-    """Find the 7z executable, handling cross-platform differences."""
-    # Try common executable names
-    candidates = ['7z', '7z.exe', '7za', '7za.exe']
-    
-    for candidate in candidates:
-        exe_path = shutil.which(candidate)
-        if exe_path:
-            return exe_path
-    
-    return None
-
-def test_archive(archive_path: str, seven_z_cmd: Optional[str] = None) -> bool:
-    """Test a 7z archive's integrity using 7z command line tool."""
-    if seven_z_cmd is None:
-        seven_z_cmd = find_7z_executable()
-        if seven_z_cmd is None:
-            print("Error: 7z executable not found. Please install 7-Zip or p7zip.", file=sys.stderr)
-            return False
-    
+def test_archive(archive_path: str) -> bool:
+    """Test a 7z archive's integrity using py7zr library."""
     try:
-        result = subprocess.run(
-            [seven_z_cmd, 't', archive_path],
-            capture_output=True,
-            text=True
-        )
-        return result.returncode == 0
-    except subprocess.SubprocessError:
+        with py7zr.SevenZipFile(archive_path, 'r') as archive:
+            # testzip() returns None if archive is OK, or name of first bad file
+            result = archive.testzip()
+            return result is None
+    except py7zr.exceptions.Bad7zFile:
+        # Invalid or corrupted 7z file
+        return False
+    except Exception as e:
+        # Handle other potential errors (permissions, file not found, etc.)
+        print(f"Error testing archive: {e}", file=sys.stderr)
         return False
 
 def main():
@@ -72,14 +56,6 @@ def main():
         print(f"Error: '{args.directory}' is not a valid directory")
         return 1
 
-    # Check for 7z executable early
-    seven_z_cmd = find_7z_executable()
-    if seven_z_cmd is None:
-        print("Error: 7z executable not found. Please install 7-Zip (Windows) or p7zip-full (Linux).", file=sys.stderr)
-        print("On Windows: Download from https://www.7-zip.org/", file=sys.stderr)
-        print("On Linux: Install p7zip-full package", file=sys.stderr)
-        return 1
-
     print(f"Scanning {args.directory}...")
     archives = find_7z_files(args.directory)
 
@@ -88,10 +64,10 @@ def main():
         return 0
 
     results = {'passed': [], 'failed': []}
-    
+
     for archive in sorted(archives):
         print(f"\nTesting: {archive}")
-        if test_archive(archive, seven_z_cmd):
+        if test_archive(archive):
             results['passed'].append(archive)
             print("✓ Archive is valid")
         else:

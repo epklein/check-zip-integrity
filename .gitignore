@@ -1,0 +1,15 @@
+# IDE
+.vscode/
+
+# Python
+__pycache__/
+
+# Virtual Environment
+.venv/
+
+# Testing
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db

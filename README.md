@@ -1,61 +1,30 @@
 # Check ZIP Integrity
 
-A cross-platform Python tool to check the integrity of 7z archives in a directory. This tool can verify both regular 7z archives and split archives (multi-volume archives). Works on Windows, Linux, and macOS.
+A Python tool to check the integrity of 7z archives in a directory. This tool can verify both regular 7z archives and split archives (multi-volume archives).
 
 ## Features
 
 - Scans directories for 7z archives
-- Tests archive integrity using the 7z command-line tool
+- Tests archive integrity using the py7zr Python library
 - Handles both regular archives (e.g., `archive.7z`) and split archives (e.g., `archive.7z.001`, `archive.7z.002`)
 - Automatically identifies and tests only the first volume of split archives
 - Provides a summary of passed/failed integrity checks
 
 ## Requirements
 
-- Python 3.6 or higher
-- 7z command-line tool (provided by `p7zip-full` on Linux or 7-Zip on Windows)
+- Python 3.9 or higher
+- py7zr library (installed via requirements.txt)
 
-### Installing 7z on Windows
+## Installation
 
-Download and install 7-Zip from the official website:
-- Visit https://www.7-zip.org/
-- Download the installer for your Windows version
-- During installation, make sure to add 7-Zip to your PATH, or manually add the installation directory (typically `C:\Program Files\7-Zip\`) to your system PATH
+1. Clone or download this repository
+2. Install the required Python package:
 
-After installation, verify that `7z` is available:
-```cmd
-7z --help
-```
-
-### Installing p7zip-full on Linux
-
-**Debian/Ubuntu:**
 ```bash
-sudo apt-get update
-sudo apt-get install p7zip-full
+pip install -r requirements.txt
 ```
 
-**Fedora/RHEL/CentOS:**
-```bash
-sudo dnf install p7zip-full
-# or for older systems:
-sudo yum install p7zip-full
-```
-
-**Arch Linux:**
-```bash
-sudo pacman -S p7zip-full
-```
-
-**openSUSE:**
-```bash
-sudo zypper install p7zip-full
-```
-
-After installation, verify that `7z` is available:
-```bash
-7z --help
-```
+That's it! No need to install external 7z tools.
 
 ## Usage
 
@@ -76,13 +45,13 @@ python3 main.py /path/to/directory --recursive
 
 ## How It Works
 
-1. **Regular Archives**: Files ending in `.7z` (e.g., `archive.7z`) are tested directly.
+1. **Regular Archives**: Files ending in `.7z` (e.g., `archive.7z`) are tested directly using py7zr's built-in integrity checking.
 
 2. **Split Archives**: For multi-volume archives like `archive.7z.001`, `archive.7z.002`, etc., the tool:
    - Identifies split archives by the `.7z.` pattern in the filename
    - Tests only the first volume (`.001` file)
    - Skips subsequent volumes (`.002`, `.003`, etc.)
-   - The `7z` command automatically handles split archives when given the first volume
+   - The py7zr library automatically handles split archives when given the first volume
 
 ## Output
 
